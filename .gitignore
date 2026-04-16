@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VS Code
+.vscode/
+
+# Node / NPM (Just in case you use them later)
+node_modules/
+npm-debug.log
