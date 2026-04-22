@@ -43,16 +43,18 @@ This template is modular. You will create multiple tags in your GTM container us
 ### 6. Audience Match - Custom event
 **What it does:** Queries the CDP in real-time to check if the current user belongs to specific audiences (segments), allowing you to personalize the website or trigger specific third-party marketing tags.
 * **Configuration:** Input a comma-separated list of Audience API IDs (e.g., `1234_1, 1234_2`).
-* **The Output:** If the user matches any of the audiences, the tag pushes a custom event named `smda_audience_match` to the GTM dataLayer, along with a `matched_audiences` array containing all the matching Audience IDs, e.g. `['1234_1', '1234_3']`.
-* **Use Case:** Create downstream Custom HTML tags that fire on the `smda_audience_match` event and use the `matched_audiences` payload to send targeted signals to platforms like Meta/Facebook Ads or Google Ads.
+* **The Output:** The tag always pushes a custom event named `smda_audience_match` to the GTM dataLayer, regardless of whether any audience matched. It includes two parameters:
+  * `matched_audience_ids` — an array of the IDs of all matched audiences (e.g. `['1234_1', '1234_3']`), or `null` if none matched.
+  * `matched_audiences_data` — an object keyed by matched audience ID, each containing the segment payload returned by the CDP (e.g. `{'1234_1': {'lastProduct': 'snowboarding'}}`), or `null` if none matched.
+* **Use Case:** Create downstream Custom HTML tags that fire on the `smda_audience_match` event. Use `matched_audience_ids` to identify which audiences matched and `matched_audiences_data` to access segment-specific properties for personalisation or targeting.
 
 #### Setting up downstream activation tags
 
-Before creating any activation tag, you need **one GTM variable** to expose the `matched_audiences` array:
+Before creating any activation tag, you need **two GTM variables** to expose the event parameters:
 
 1. In GTM, go to **Variables → New → Data Layer Variable**.
-2. Set **Data Layer Variable Name** to `matched_audiences`.
-3. Name the variable `dl - matched_audiences` and save.
+2. Set **Data Layer Variable Name** to `matched_audience_ids`. Name the variable `dl - matched_audience_ids` and save.
+3. Repeat for a second variable: set **Data Layer Variable Name** to `matched_audiences_data`. Name it `dl - matched_audiences_data` and save.
 
 Then, for each activation tag below:
 
@@ -72,7 +74,7 @@ This tag initialises the Meta pixel (if not already present on the page) and fir
   var fb_id = '1111111111111111';
 
   // Matched audiences from the smda_audience_match dataLayer event
-  var matched_audiences = {{dl - matched_audiences}} || [];
+  var matched_audiences = {{dl - matched_audience_ids}} || [];
 
   // Load Facebook pixel stub if not already loaded
   if (!window.fbq) {
@@ -134,7 +136,7 @@ This tag maps each Data Activation Audience ID to a specific Google Ads conversi
   if (typeof window.gtag !== 'function') return;
 
   // Matched audiences from the smda_audience_match dataLayer event
-  var matched_audiences = {{dl - matched_audiences}} || [];
+  var matched_audiences = {{dl - matched_audience_ids}} || [];
 
   // Throttle: avoid re-firing the same conversion more than once every 4 hours
   var _sm_da_sent = {};
@@ -174,6 +176,44 @@ This tag maps each Data Activation Audience ID to a specific Google Ads conversi
 
 > **How to find your conversion label:** In Google Ads, go to **Goals → Conversions → New conversion action → Website**. The `send_to` value is shown in the tag snippet as `AW-XXXXXXXXX/YYYYYYYYYYY`. Use `aw_remarketing_only: true` to signal that this conversion is for audience targeting only, not bid optimisation.
 
+### 7. Orchestration Match - Custom event
+**What it does:** Queries the CDP in real-time to check whether the current user is part of a specific Orchestration Journey or Audience, and evaluates their position against a configured Step condition. This allows you to trigger personalisation or third-party tags based on where a user is (or is not) within a CDP-managed journey.
+
+* **Configuration:**
+  * **Journey or Audience ID** — the UUID of the orchestration journey or audience to query.
+  * **Step evaluation** — the condition to evaluate:
+    * **In ANY step** — matches if the user is found anywhere in the journey, regardless of their current step.
+    * **IN a specific step** — matches if the user's current step equals the configured Step ID.
+    * **NOT in a specific step** — matches if the user's current step differs from the configured Step ID.
+  * **Step ID** — the UUID of the step to evaluate against. Required for `IN a specific step` and `NOT in a specific step`.
+
+* **The Output:** The tag always pushes a custom event named `smda_orchestration_match` to the GTM dataLayer, regardless of whether the condition matched. It includes the following parameters:
+  * `orchestration_match` — `true` if the condition matched, `false` if not. Always present.
+  * `orchestration_id` — the configured Journey/Audience ID. Always present.
+  * `matched_orchestration_condition` — the evaluation mode configured in the tag (`any_step`, `in_step`, `not_in_step`). Always present.
+  * `step_id` — the configured Step ID. Present only when the condition is `in_step` or `not_in_step`.
+  * `orchestration_data` — the full journey payload returned by the CDP if matched (including `currentStepId` and any segment properties), or `null` if not matched.
+
+* **Use Case:** Build GTM triggers scoped to a specific journey and step by combining `orchestration_id`, `step_id`, and `orchestration_match equals true`. Use `orchestration_data` in downstream tags to access any segment-level properties returned by the CDP.
+
+#### Setting up downstream activation tags
+
+Create **GTM Data Layer Variables** for each parameter you want to use in downstream tags or trigger conditions:
+
+| Variable name | Data Layer Variable Name |
+|---|---|
+| `dl - orchestration_match` | `orchestration_match` |
+| `dl - orchestration_id` | `orchestration_id` |
+| `dl - matched_orchestration_condition` | `matched_orchestration_condition` |
+| `dl - step_id` | `step_id` |
+| `dl - orchestration_data` | `orchestration_data` |
+
+**Recommended trigger setup for a downstream tag:**
+* **Tag type:** Custom HTML
+* **Trigger:** Custom Event — Event Name: `smda_orchestration_match`
+* **Additional condition:** `dl - orchestration_match` **equals** `true`
+* Optionally, further scope the trigger by adding `dl - orchestration_id` **equals** `<your-journey-uuid>` and `dl - step_id` **equals** `<your-step-uuid>`.
+
 ---
 
 ## 🛡️ Server GTM Configuration (Highly Recommended)
@@ -190,6 +230,6 @@ At the bottom of the tag configuration, expand the **Server GTM configuration** 
 
 ### 💡 A Note for Reviewers & Developers
 This template utilizes standard GTM Sandboxed JavaScript APIs. For security and compliance:
-* It does **not** use wildcard script injections (`injectScript` is strictly limited to the trusted Audience Match endpoint).
+* It does **not** use wildcard script injections (`injectScript` is strictly limited to the trusted Audience Match and Orchestration Match endpoints).
 * E-commerce and routing payloads are processed safely using `sendPixel` with robust callbacks.
 * Local storage and cookies are managed exclusively for the `_sm_da_uuid` first-party identifier.

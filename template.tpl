@@ -63,6 +63,10 @@ ___TEMPLATE_PARAMETERS___
             "displayValue": "Audience Match - Custom event"
           },
           {
+            "value": "type_orchestration_match",
+            "displayValue": "Orchestration Match - Custom event"
+          },
+          {
             "value": "generate_sm_da_uuid",
             "displayValue": "Generate _sm_da_uuid cookie"
           }
@@ -348,11 +352,6 @@ ___TEMPLATE_PARAMETERS___
     "groupStyle": "ZIPPY_OPEN",
     "subParams": [
       {
-        "type": "LABEL",
-        "name": "audienceMatchLabel1",
-        "displayName": "The Audience Match Custom Event checks the user\u0027s Tracking Identifier agains a list of provided Audience Ids (API_IDs or segment ids).\u003cbr\u003e\nIf the a match is successful and the user is listed in any of audiences, a custom event \u003cb\u003esmda_audience_match\u003c/b\u003e will be fired on the Data Layer including a parameter \u003cb\u003ematched_audiences\u003c/b\u003e containing a list of all the matching audience ids.\u003cbr\u003e\nExample: matched_audiences: [1234_10 , 1234_12 , 1234_33]\u003cbr\u003e\u003cbr\u003e"
-      },
-      {
         "type": "TEXT",
         "name": "segmentList",
         "displayName": "Audience Id list (API ID list)",
@@ -365,12 +364,107 @@ ___TEMPLATE_PARAMETERS___
           }
         ],
         "valueHint": "1234_1,1234_2,1234_3,"
+      },
+      {
+        "type": "LABEL",
+        "name": "audienceMatchLabel1",
+        "displayName": "The Audience Match Custom Event checks the user\u0027s Tracking Identifier agains a list of provided Audience Ids (API_IDs or segment ids).\u003cbr\u003e\nThe custom event \u003cb\u003esmda_audience_match\u003c/b\u003e is always fired on the Data Layer, regardless of whether any audience matched.\u003cbr\u003e\nIt includes two parameters:\u003cbr\u003e\n• \u003cb\u003ematched_audience_ids\u003c/b\u003e — an array of the IDs of all matched audiences, or null if none matched.\u003cbr\u003e\n• \u003cb\u003ematched_audiences_data\u003c/b\u003e — an object keyed by matched audience ID, each containing the segment payload returned by the platform, or null if none matched.\n\u003cbr\u003e"
       }
     ],
     "enablingConditions": [
       {
         "paramName": "SelectTagType",
         "paramValue": "type_audience_match",
+        "type": "EQUALS"
+      }
+    ]
+  },
+  {
+    "type": "GROUP",
+    "name": "g_orchestrationMatch",
+    "displayName": "Orchestration Match - Custom event",
+    "groupStyle": "ZIPPY_OPEN",
+    "subParams": [
+      {
+        "type": "TEXT",
+        "name": "orchestrationId",
+        "displayName": "Journey or Audience ID",
+        "simpleValueType": true,
+        "clearOnCopy": true,
+        "help": "The ID of the Orchestration Journey or Audience you\u0027d like to match with (iUUID format).",
+        "valueValidators": [
+          {
+            "type": "REGEX",
+            "args": [
+              "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            ],
+            "errorMessage": "This value must be in a valid UUID format",
+            "enablingConditions": []
+          },
+          {
+            "type": "NON_EMPTY"
+          }
+        ],
+        "valueHint": "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+      },
+      {
+        "type": "RADIO",
+        "name": "orchestrationMatch",
+        "displayName": "Step evaluation",
+        "radioItems": [
+          {
+            "value": "any_step",
+            "displayValue": "In ANY step"
+          },
+          {
+            "value": "in_step",
+            "displayValue": "IN a specific step"
+          },
+          {
+            "value": "not_in_step",
+            "displayValue": "NOT in a specific step"
+          }
+        ],
+        "simpleValueType": true
+      },
+      {
+        "type": "TEXT",
+        "name": "orchestrationStepId",
+        "displayName": "Step ID",
+        "simpleValueType": true,
+        "clearOnCopy": true,
+        "valueHint": "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx",
+        "valueValidators": [
+          {
+            "type": "REGEX",
+            "args": [
+              "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            ],
+            "errorMessage": "This value must be in a valid UUID format"
+          },
+          {
+            "type": "NON_EMPTY"
+          }
+        ],
+        "help": "The ID of the Orchestration Step you\u0027d like to match with (UUID format).",
+        "enablingConditions": [
+          {
+            "paramName": "orchestrationMatch",
+            "paramValue": "any_step",
+            "type": "NOT_EQUALS"
+          }
+        ]
+      },
+      {
+        "type": "LABEL",
+        "name": "OrchestrationMatchLabel",
+        "displayName": "The Orchestration Match Custom Event checks the user\u0027s Tracking Identifier against a Journey or Audience ID and evaluates the result against the selected Step condition.\u003cbr\u003e\nThe custom event\u003cb\u003esmda_orchestration_match\u003c/b\u003e is always fired on the Data Layer, regardless of whether the condition matched.\u003cbr\u003e\nIt includes the following parameters:\u003cbr\u003e\n\n• \u003cb\u003eorchestration_match\u003c/b\u003e — true if the condition matched, false if not.\u003cbr\u003e\n• \u003cb\u003eorchestration_id\u003c/b\u003e — the configured Journey/Audience ID.\u003cbr\u003e\n• \u003cb\u003ematched_orchestration_condition\u003c/b\u003e — the evaluation mode configured in the tag.\u003cbr\u003e\n• \u003cb\u003estep_id\u003c/b\u003e — the configured Step ID. Present only for Step specific matches.\u003cbr\u003e\n• \u003cb\u003eorchestration_data\u003c/b\u003e — the full journey payload returned by the platform if matched, null if not.\u003cbr\u003e\n\u003cbr\u003e"
+      }
+    ],
+    "enablingConditions": [
+      {
+        "paramName": "SelectTagType",
+        "paramValue": "type_orchestration_match",
         "type": "EQUALS"
       }
     ]
@@ -510,8 +604,28 @@ ___TEMPLATE_PARAMETERS___
     "enablingConditions": [
       {
         "paramName": "SelectTagType",
-        "paramValue": "type_audience_match",
-        "type": "NOT_EQUALS"
+        "paramValue": "type_engagement",
+        "type": "EQUALS"
+      },
+      {
+        "paramName": "SelectTagType",
+        "paramValue": "type_fact",
+        "type": "EQUALS"
+      },
+      {
+        "paramName": "SelectTagType",
+        "paramValue": "type_mapping",
+        "type": "EQUALS"
+      },
+      {
+        "paramName": "SelectTagType",
+        "paramValue": "type_ecommerce_default",
+        "type": "EQUALS"
+      },
+      {
+        "paramName": "SelectTagType",
+        "paramValue": "generate_sm_da_uuid",
+        "type": "EQUALS"
       }
     ]
   }
@@ -536,6 +650,7 @@ const makeInteger        = require('makeInteger');
 
 const SM_TRACKING_URL      = 'https://t.svtrd.com/';
 const SM_AUDIENCEMATCH_URL = 'https://tdn.r42tag.com/data/segment/';
+const SM_ORCHESTRATIONMATCH_URL = 'https://tdn.r42tag.com/data/journeys/';
 
 // UUID MANAGER DEFAULS
 // The Cookie name can be dynamic (driven by the UI)
@@ -749,25 +864,97 @@ if (tagType === 'type_engagement') {
   injectScript(segmentUrl, function() {
     var segmentingData = copyFromWindow('_st.segmenting.data');
     if (!segmentingData) return data.gtmOnSuccess();
- 
-    var matchedAudiences = [];
+
+    var matchedAudienceIds = null;
+    var matchedAudiencesData = null;
     for (var segId in segmentingData) {
       if (segmentingData[segId] !== false) {
-        matchedAudiences.push(segId);
+        if (!matchedAudienceIds) { matchedAudienceIds = []; matchedAudiencesData = {}; }
+        matchedAudienceIds.push(segId);
+        matchedAudiencesData[segId] = segmentingData[segId];
       }
     }
-  
-    if (matchedAudiences.length > 0) {
-      var dataLayerPush = createQueue('dataLayer');
-      dataLayerPush({
-        event: 'smda_audience_match',
-        matched_audiences: matchedAudiences
-      });
-    }
+
+    var dataLayerPush = createQueue('dataLayer');
+    dataLayerPush({
+      event: 'smda_audience_match',
+      matched_audience_ids: matchedAudienceIds,
+      matched_audiences_data: matchedAudiencesData
+    });
     data.gtmOnSuccess();
  
   }, function() {
     logToConsole('Audience match - Error: failed to load script');
+    data.gtmOnFailure();
+  });
+
+} else if (tagType === 'type_orchestration_match') {
+  var orchestrationId      = '' + (data.orchestrationId || '');
+  var orchestrationMatch   = data.orchestrationMatch || 'any_step';
+  var orchestrationStepId  = '' + (data.orchestrationStepId || '');
+
+  if (!orchestrationId) {
+    logToConsole('Error: Missing required field(s): orchestrationId');
+    return data.gtmOnFailure();
+  }
+
+  var ts = '' + getTimestampMillis();
+  var tsPart = ts.length >= 12 ? ts.slice(-12) : ('000000000000' + ts).slice(-12);
+  var randPart = ('0000' + generateRandom(0, 9999)).slice(-4);
+  var cacheBuster = '00000000-0000-4000-' + randPart + '-' + tsPart;
+
+  var orchestrationUrl = SM_ORCHESTRATIONMATCH_URL +
+                         encodeUriComponent(siteId) + '/' +
+                         encodeUriComponent(trackID) + '/' +
+                         encodeUriComponent(orchestrationId) + ',' + cacheBuster;
+
+  createQueue('_st');
+  createQueue('_st.cj');
+  createQueue('_st.cj.data');
+  createQueue('_st.cj.listeners');
+
+  injectScript(orchestrationUrl, function() {
+    var cjData = copyFromWindow('_st.cj.data');
+    if (!cjData) return data.gtmOnSuccess();
+
+    var result = cjData[orchestrationId];
+    var isMatched = false;
+    var matchedData = null;
+
+    if (result !== false) {
+      var currentStepId = result ? (result.currentStepId || null) : null;
+
+      if (orchestrationMatch === 'any_step') {
+        isMatched = true;
+      } else if (orchestrationMatch === 'in_step') {
+        isMatched = (currentStepId === orchestrationStepId);
+      } else if (orchestrationMatch === 'not_in_step') {
+        isMatched = (currentStepId !== orchestrationStepId);
+      }
+
+      if (isMatched) {
+        matchedData = result;
+      }
+    }
+
+    var eventPayload = {
+      event: 'smda_orchestration_match',
+      orchestration_match: isMatched,
+      orchestration_id: orchestrationId,
+      matched_orchestration_condition: orchestrationMatch,
+    };
+    if (orchestrationMatch !== 'any_step') {
+      eventPayload.step_id = orchestrationStepId;
+    }
+    eventPayload.orchestration_data = matchedData;
+
+
+    var dataLayerPush = createQueue('dataLayer');
+    dataLayerPush(eventPayload);
+    data.gtmOnSuccess();
+
+  }, function() {
+    logToConsole('Orchestration match - Error: failed to load script');
     data.gtmOnFailure();
   });
 
@@ -1194,6 +1381,123 @@ ___WEB_PERMISSIONS___
                     "boolean": false
                   }
                 ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "_st.cj"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "_st.cj.data"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "_st.cj.listeners"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
               }
             ]
           }
@@ -1219,7 +1523,7 @@ ___WEB_PERMISSIONS___
             "listItem": [
               {
                 "type": 1,
-                "string": "https://tdn.r42tag.com/data/segment/*"
+                "string": "https://tdn.r42tag.com/*"
               }
             ]
           }
@@ -1415,6 +1719,4 @@ scenarios: []
 
 ___NOTES___
 
-Created on 18/03/2026, 11:04:19
-
-
+Created on 22/04/2026
