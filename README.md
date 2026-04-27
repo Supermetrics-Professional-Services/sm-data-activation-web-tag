@@ -7,7 +7,7 @@ Instead of loading a heavy custom JavaScript tracking snippet on your website, t
 ## 📋 Prerequisites
 Before configuring your tags, you will need:
 * **Your Site ID:** A unique number identifying your CDP instance (found in your Data Activation admin panel).
-* **A Tracking Identifier (UUID):** A stable identifier for the user. We highly recommend using this template to generate a first-party `_sm_da_uuid` cookie (see *Tag Types* below).
+* **A Tracking Identifier (UUID):** A stable identifier for the user. We highly recommend using this template to generate a first-party `_svtri` cookie (see *Tag Types* below).
 
 ---
 
@@ -15,7 +15,7 @@ Before configuring your tags, you will need:
 
 This template is modular. You will create multiple tags in your GTM container using this single template by selecting different "Tag Types" from the dropdown.
 
-### 1. Generate `_sm_da_uuid` cookie (Identity Management)
+### 1. Generate `_svtri` cookie (Identity Management)
 **What it does:** This is the foundation of your tracking. It generates a unique, anonymous identifier (UUID) for new visitors and manages the browser cookie to ensure users are tracked consistently across sessions.
 * **Best Practice:** Create one tag with this type and set it to fire on **All Pages** as early as possible (e.g., Initialization or Page View).
 * **Server GTM:** To protect your tracking from Safari's Intelligent Tracking Prevention (ITP) which deletes cookies after 7 days, expand the **Server GTM configuration** section and enter your **Server container URL**. This routes the cookie generation through your own Server GTM domain, granting it a stable, long-term lifespan. You will require to import our [`Supermetrics Data Activation - Server Client.tpl` 🔗](https://github.com/orgs/Supermetrics-Professional-Services/repositories) into your sGTM container to implement the server-set cookie creation. 
@@ -232,4 +232,4 @@ At the bottom of the tag configuration, expand the **Server GTM configuration** 
 This template utilizes standard GTM Sandboxed JavaScript APIs. For security and compliance:
 * It does **not** use wildcard script injections (`injectScript` is strictly limited to the trusted Audience Match and Orchestration Match endpoints).
 * E-commerce and routing payloads are processed safely using `sendPixel` with robust callbacks.
-* Local storage and cookies are managed exclusively for the `_sm_da_uuid` first-party identifier.
+* Local storage and cookies are managed exclusively for the `_svtri` first-party identifier.

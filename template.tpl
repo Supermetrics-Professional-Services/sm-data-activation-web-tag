@@ -67,8 +67,8 @@ ___TEMPLATE_PARAMETERS___
             "displayValue": "Orchestration Match - Custom event"
           },
           {
-            "value": "generate_sm_da_uuid",
-            "displayValue": "Generate _sm_da_uuid cookie"
+            "value": "generate_svtri",
+            "displayValue": "Generate _svtri cookie"
           }
         ],
         "simpleValueType": true,
@@ -118,7 +118,7 @@ ___TEMPLATE_PARAMETERS___
       {
         "type": "LABEL",
         "name": "lbl_trackId",
-        "displayName": "Use a Server-Set UUID cookie as your tracking id.\u003cbr\u003e\nIf you don\u0027t have a UUID already, create a new Data Activation Tag and choose Tag Type: \u003cb\u003eGenerate _sm_da_uuid cookie\u003c/b\u003e.\u003cbr\u003e\nThe new tag will need to be fired as early as possible on every Page View.",
+        "displayName": "Use a Server-Set UUID cookie as your tracking id.\u003cbr\u003e\nIf you don\u0027t have a UUID already, create a new Data Activation Tag and choose Tag Type: \u003cb\u003eGenerate _svtri cookie\u003c/b\u003e.\u003cbr\u003e\nThe new tag will need to be fired as early as possible on every Page View.",
         "enablingConditions": [
           {
             "paramName": "trackId",
@@ -132,7 +132,7 @@ ___TEMPLATE_PARAMETERS___
     "enablingConditions": [
       {
         "paramName": "SelectTagType",
-        "paramValue": "generate_sm_da_uuid",
+        "paramValue": "generate_svtri",
         "type": "NOT_EQUALS"
       }
     ]
@@ -482,7 +482,7 @@ ___TEMPLATE_PARAMETERS___
         "enablingConditions": [
           {
             "paramName": "SelectTagType",
-            "paramValue": "generate_sm_da_uuid",
+            "paramValue": "generate_svtri",
             "type": "EQUALS"
           }
         ]
@@ -492,16 +492,16 @@ ___TEMPLATE_PARAMETERS___
         "name": "customCookieName",
         "displayName": "User Tracking Identifier UUID - Cookie name",
         "simpleValueType": true,
-        "defaultValue": "_sm_da_uuid",
+        "defaultValue": "_svtri",
         "enablingConditions": [
           {
             "paramName": "SelectTagType",
-            "paramValue": "generate_sm_da_uuid",
+            "paramValue": "generate_svtri",
             "type": "EQUALS"
           }
         ],
-        "help": "Specify your custom User Tracking Identifier UUID - Cookie name or use the default \u003cb\u003e_sm_da_uuid\u003c/b\u003e.",
-        "valueHint": "_sm_da_uuid",
+        "help": "Specify your custom User Tracking Identifier UUID - Cookie name or use the default \u003cb\u003e_svtri\u003c/b\u003e.",
+        "valueHint": "_svtri",
         "valueValidators": [
           {
             "type": "NON_EMPTY"
@@ -525,7 +525,7 @@ ___TEMPLATE_PARAMETERS___
         "enablingConditions": [
           {
             "paramName": "SelectTagType",
-            "paramValue": "generate_sm_da_uuid",
+            "paramValue": "generate_svtri",
             "type": "NOT_EQUALS"
           }
         ]
@@ -537,7 +537,7 @@ ___TEMPLATE_PARAMETERS___
         "enablingConditions": [
           {
             "paramName": "SelectTagType",
-            "paramValue": "generate_sm_da_uuid",
+            "paramValue": "generate_svtri",
             "type": "NOT_EQUALS"
           }
         ]
@@ -573,7 +573,7 @@ ___TEMPLATE_PARAMETERS___
         "enablingConditions": [
           {
             "paramName": "SelectTagType",
-            "paramValue": "generate_sm_da_uuid",
+            "paramValue": "generate_svtri",
             "type": "EQUALS"
           },
           {
@@ -586,11 +586,11 @@ ___TEMPLATE_PARAMETERS___
       {
         "type": "LABEL",
         "name": "lbl_ssGTMURL",
-        "displayName": "The endpoint for your server container.\u003cbr\u003e\nThis URL is required for event routing and generating the server-set \u003ci\u003e_sm_da_uuid\u003c/i\u003e cookie.",
+        "displayName": "The endpoint for your server container.\u003cbr\u003e\nThis URL is required for event routing and generating the server-set \u003ci\u003e_svtri\u003c/i\u003e cookie.",
         "enablingConditions": [
           {
             "paramName": "SelectTagType",
-            "paramValue": "generate_sm_da_uuid",
+            "paramValue": "generate_svtri",
             "type": "EQUALS"
           },
           {
@@ -624,7 +624,7 @@ ___TEMPLATE_PARAMETERS___
       },
       {
         "paramName": "SelectTagType",
-        "paramValue": "generate_sm_da_uuid",
+        "paramValue": "generate_svtri",
         "type": "EQUALS"
       }
     ]
@@ -655,11 +655,11 @@ const SM_ORCHESTRATIONMATCH_URL = 'https://tdn.r42tag.com/data/journeys/';
 // UUID MANAGER DEFAULS
 // The Cookie name can be dynamic (driven by the UI)
 var customName = '' + (data.customCookieName || '');
-var COOKIE_NAME = customName.trim() || '_sm_da_uuid';
+var COOKIE_NAME = customName.trim() || '_svtri';
 
 // The Local Storage keys MUST remain static to satisfy GTM Permissions
-var LS_UUID_KEY = '_sm_da_uuid';
-var LS_REFRESH_KEY = '_sm_da_uuid_refresh_ts';
+var LS_UUID_KEY = '_svtri';
+var LS_REFRESH_KEY = '_svtri_refresh_ts';
 
 const COOKIE_MAX_AGE = 34560000;            // ~400 days, seconds
 const REFRESH_MS     = 24 * 60 * 60 * 1000; // 1 day, milliseconds
@@ -774,7 +774,7 @@ if (!tagType || tagType === 'choose_type') {
   return data.gtmOnFailure();
 }
 
-if (tagType !== 'generate_sm_da_uuid') {
+if (tagType !== 'generate_svtri') {
   if (!siteId || !trackID) {
     logToConsole('Error: Missing required field(s): siteId or trackID');
     return data.gtmOnFailure();
@@ -1040,7 +1040,7 @@ if (tagType === 'type_engagement') {
     sendPixel(itemUrl, isLast ? data.gtmOnSuccess : null, isLast ? data.gtmOnFailure : null);
   }
 
-} else if (tagType === 'generate_sm_da_uuid') {
+} else if (tagType === 'generate_svtri') {
   var cookieArr      = getCookieValues(COOKIE_NAME);
   var existingCookie = (cookieArr && cookieArr.length) ? cookieArr[0] : '';
   var existingLS     = localStorage.getItem(LS_UUID_KEY) || ''; // Uses static name
@@ -1587,7 +1587,7 @@ ___WEB_PERMISSIONS___
                 "mapValue": [
                   {
                     "type": 1,
-                    "string": "_sm_da_uuid_refresh_ts"
+                    "string": "_svtri_refresh_ts"
                   },
                   {
                     "type": 8,
@@ -1618,7 +1618,7 @@ ___WEB_PERMISSIONS___
                 "mapValue": [
                   {
                     "type": 1,
-                    "string": "_sm_da_uuid"
+                    "string": "_svtri"
                   },
                   {
                     "type": 8,
