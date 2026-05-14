@@ -2,7 +2,7 @@ homepage: "https://www.supermetrics.com"
 documentation: "https://github.com/Supermetrics-Professional-Services/sm-data-activation-web-tag#readme"
 versions:
   # Latest version
-  - sha: 
+  - sha: bd1d72921b82c8843b45c5b33f39004691f4ae3c
     changeNotes: v1.5 | Removed Legacy Audience Match type | E-commerce type [1] fixed category deduplication issue; [2] added summary details to view_cart and begin_checkout events
 
   # Older versions
