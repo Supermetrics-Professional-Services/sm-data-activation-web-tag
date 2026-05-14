@@ -11,10 +11,14 @@ ___INFO___
 {
   "type": "TAG",
   "id": "cvt_temp_public_id",
-  "version": 1,
+  "version": 1.5,
   "securityGroups": [],
   "displayName": "Data Activation - Web Tag",
-  "categories": ["ANALYTICS", "MARKETING", "ADVERTISING"],
+  "categories": [
+    "ANALYTICS",
+    "MARKETING",
+    "ADVERTISING"
+  ],
   "brand": {
     "id": "supermetrics",
     "displayName": "Supermetrics",
@@ -57,10 +61,6 @@ ___TEMPLATE_PARAMETERS___
           {
             "value": "type_ecommerce_default",
             "displayValue": "Data Layer E-commerce events"
-          },
-          {
-            "value": "type_audience_match",
-            "displayValue": "Audience Match - Custom event"
           },
           {
             "value": "type_orchestration_match",
@@ -341,40 +341,6 @@ ___TEMPLATE_PARAMETERS___
       {
         "paramName": "SelectTagType",
         "paramValue": "type_ecommerce_default",
-        "type": "EQUALS"
-      }
-    ]
-  },
-  {
-    "type": "GROUP",
-    "name": "g_audienceMatch",
-    "displayName": "Audience Match - Custom event",
-    "groupStyle": "ZIPPY_OPEN",
-    "subParams": [
-      {
-        "type": "TEXT",
-        "name": "segmentList",
-        "displayName": "Audience Id list (API ID list)",
-        "simpleValueType": true,
-        "clearOnCopy": true,
-        "help": "List of coma separated values you can find for each Audience on the activation platform. (API ID)",
-        "valueValidators": [
-          {
-            "type": "NON_EMPTY"
-          }
-        ],
-        "valueHint": "1234_1,1234_2,1234_3,"
-      },
-      {
-        "type": "LABEL",
-        "name": "audienceMatchLabel1",
-        "displayName": "The Audience Match Custom Event checks the user\u0027s Tracking Identifier agains a list of provided Audience Ids (API_IDs or segment ids).\u003cbr\u003e\nThe custom event \u003cb\u003esmda_audience_match\u003c/b\u003e is always fired on the Data Layer, regardless of whether any audience matched.\u003cbr\u003e\nIt includes two parameters:\u003cbr\u003e\n• \u003cb\u003ematched_audience_ids\u003c/b\u003e — an array of the IDs of all matched audiences, or null if none matched.\u003cbr\u003e\n• \u003cb\u003ematched_audiences_data\u003c/b\u003e — an object keyed by matched audience ID, each containing the segment payload returned by the platform, or null if none matched.\n\u003cbr\u003e"
-      }
-    ],
-    "enablingConditions": [
-      {
-        "paramName": "SelectTagType",
-        "paramValue": "type_audience_match",
         "type": "EQUALS"
       }
     ]
@@ -791,6 +757,7 @@ if (b_ssForward && !ssGTMURL) {
 // TAG TYPE HANDLERS
 // ========================================
 
+// type_engagement -----------------------------------------------
 if (tagType === 'type_engagement') {
   var engagementName = '' + (data.engagementName || '');
   var engagementProperties = data.engagementProperties || [];
@@ -806,7 +773,9 @@ if (tagType === 'type_engagement') {
   logToConsole('Sending engagement:', url);
   sendPixel(url, data.gtmOnSuccess, data.gtmOnFailure);
 
-} else if (tagType === 'type_fact') {
+}
+// type_fact -----------------------------------------------
+else if (tagType === 'type_fact') {
   var factName = '' + (data.factName || '');
   var factTtl = '' + (data.factTtl || '');
   var factProperties = data.factProperties || [];
@@ -822,7 +791,9 @@ if (tagType === 'type_engagement') {
   logToConsole('Sending fact:', factUrl);
   sendPixel(factUrl, data.gtmOnSuccess, data.gtmOnFailure);
 
-} else if (tagType === 'type_mapping') {
+}
+// type_mapping -----------------------------------------------
+else if (tagType === 'type_mapping') {
   var partnerType = '' + (data.partnerType || '');
   var partnerId = '' + (data.partnerId || '');
   var mergeFlag = data.merge ? '1' : '0';
@@ -843,52 +814,9 @@ if (tagType === 'type_engagement') {
   logToConsole('Sending mapping:', mappingUrl);
   sendPixel(mappingUrl, data.gtmOnSuccess, data.gtmOnFailure);
 
-} else if (tagType === 'type_audience_match') {
-  var segmentList = (data.segmentList || "").split(" ").join("");
-  
-  if (!segmentList) {
-    logToConsole('Error: Missing required field(s): segmentList');
-    return data.gtmOnFailure();
-  }
-
-  var segmentUrl = SM_AUDIENCEMATCH_URL +
-                   encodeUriComponent(siteId) + '/' +
-                   encodeUriComponent(trackID) + '/' +
-                   segmentList;
- 
-  createQueue('_st');
-  createQueue('_st.segmenting');
-  createQueue('_st.segmenting.data');
-  createQueue('_st.segmenting.listeners');
- 
-  injectScript(segmentUrl, function() {
-    var segmentingData = copyFromWindow('_st.segmenting.data');
-    if (!segmentingData) return data.gtmOnSuccess();
-
-    var matchedAudienceIds = null;
-    var matchedAudiencesData = null;
-    for (var segId in segmentingData) {
-      if (segmentingData[segId] !== false) {
-        if (!matchedAudienceIds) { matchedAudienceIds = []; matchedAudiencesData = {}; }
-        matchedAudienceIds.push(segId);
-        matchedAudiencesData[segId] = segmentingData[segId];
-      }
-    }
-
-    var dataLayerPush = createQueue('dataLayer');
-    dataLayerPush({
-      event: 'smda_audience_match',
-      matched_audience_ids: matchedAudienceIds,
-      matched_audiences_data: matchedAudiencesData
-    });
-    data.gtmOnSuccess();
- 
-  }, function() {
-    logToConsole('Audience match - Error: failed to load script');
-    data.gtmOnFailure();
-  });
-
-} else if (tagType === 'type_orchestration_match') {
+}
+// type_orchestration_match -----------------------------------------------
+else if (tagType === 'type_orchestration_match') {
   var orchestrationId      = '' + (data.orchestrationId || '');
   var orchestrationMatch   = data.orchestrationMatch || 'any_step';
   var orchestrationStepId  = '' + (data.orchestrationStepId || '');
@@ -958,7 +886,9 @@ if (tagType === 'type_engagement') {
     data.gtmOnFailure();
   });
 
-} else if (tagType === 'type_ecommerce_default') {
+}
+// type_ecommerce_default -----------------------------------------------
+else if (tagType === 'type_ecommerce_default') {
   var supportedEvents = [
     'view_item', 'add_to_wishlist', 'add_to_cart', 'remove_from_cart',
     'view_cart', 'begin_checkout', 'purchase'
@@ -977,9 +907,9 @@ if (tagType === 'type_engagement') {
   var items = ecommerce.items || [];
   if (!items || items.length === 0) return data.gtmOnFailure();
 
-  // Handle Order Summary if Purchase
-  if (eventName === 'purchase') {
-    var categoryStr = '';
+  // Handle Order Summary for purchase, view_cart, begin_checkout
+  if (eventName === 'purchase' || eventName === 'view_cart' || eventName === 'begin_checkout') {
+    var categoryStr = '|';
     var runningTotal = 0;
 
     for (var j = 0; j < items.length; j++) {
@@ -990,29 +920,29 @@ if (tagType === 'type_engagement') {
       }
     }
 
-    var orderProps = {
-      o_id: ecommerce.transaction_id,
-      o_total: ecommerce.value,
-      o_currency: ecommerce.currency,
-      o_item_count: items.length,
-      o_coupon: ecommerce.coupon,
-      o_categories: '|' + categoryStr,
-      o_is_first: ecommerce.order_is_first,
-      o_avg_price: items.length > 0 ? runningTotal / items.length : 0,
-      o_tax: ecommerce.tax,
-      o_shipping: ecommerce.shipping
-    };
+    var orderProps = {};
+    orderProps.o_item_count = items.length;
+    orderProps.o_categories = categoryStr;
+    orderProps.o_avg_price = items.length > 0 ? runningTotal / items.length : 0;
+    if (ecommerce.currency) orderProps.o_currency = ecommerce.currency;
+    if (ecommerce.value != null) orderProps.o_total = ecommerce.value;
+    if (ecommerce.transaction_id) orderProps.o_id = ecommerce.transaction_id;
+    if (ecommerce.coupon) orderProps.o_coupon = ecommerce.coupon;
+    if (ecommerce.tax != null) orderProps.o_tax = ecommerce.tax;
+    if (ecommerce.shipping != null) orderProps.o_shipping = ecommerce.shipping;
+    if (ecommerce.order_is_first != null) orderProps.o_is_first = ecommerce.order_is_first;
 
-    var summaryUrl = buildBaseUrl(siteId, trackID, { e: 'true', et: 'purchase_summary' });
+    var summaryUrl = buildBaseUrl(siteId, trackID, { e: 'true', et: eventName + '_summary' });
     summaryUrl = appendObjToUrl(summaryUrl, orderProps);
     sendPixel(summaryUrl, null, null);
   }
 
-  // Handle Items (Consolidated Loop for Purchase AND Non-Purchase)
+  // Handle Items
+  var hasSummary = (eventName === 'purchase' || eventName === 'view_cart' || eventName === 'begin_checkout');
   for (var i = 0; i < items.length; i++) {
     var item = items[i];
     var isLast = (i === items.length - 1);
-    var targetEvent = eventName === 'purchase' ? 'purchase_item_detail' : eventName;
+    var targetEvent = hasSummary ? eventName + '_item_details' : eventName;
 
     var itemProps = {
       i_id: item.item_id,
@@ -1024,14 +954,13 @@ if (tagType === 'type_engagement') {
       i_variant: item.item_variant
     };
 
-    // Tack on order context if it's a purchase item detail
-    if (eventName === 'purchase') {
-      itemProps.o_id = ecommerce.transaction_id;
-      itemProps.o_total = ecommerce.value;
-      itemProps.o_currency = ecommerce.currency;
+    if (hasSummary) {
       itemProps.o_item_count = items.length;
       itemProps.i_line_total = (item.price || 0) * (item.quantity || 1);
-      itemProps.i_coupon = item.coupon;
+      if (ecommerce.transaction_id) itemProps.o_id = ecommerce.transaction_id;
+      if (ecommerce.value != null) itemProps.o_total = ecommerce.value;
+      if (ecommerce.currency) itemProps.o_currency = ecommerce.currency;
+      if (item.coupon) itemProps.i_coupon = item.coupon;
     }
 
     var itemUrl = buildBaseUrl(siteId, trackID, { e: 'true', et: targetEvent });
@@ -1040,7 +969,9 @@ if (tagType === 'type_engagement') {
     sendPixel(itemUrl, isLast ? data.gtmOnSuccess : null, isLast ? data.gtmOnFailure : null);
   }
 
-} else if (tagType === 'generate_svtri') {
+}
+// generate_svtri -----------------------------------------------
+else if (tagType === 'generate_svtri') {
   var cookieArr      = getCookieValues(COOKIE_NAME);
   var existingCookie = (cookieArr && cookieArr.length) ? cookieArr[0] : '';
   var existingLS     = localStorage.getItem(LS_UUID_KEY) || ''; // Uses static name
@@ -1720,3 +1651,5 @@ scenarios: []
 ___NOTES___
 
 Created on 22/04/2026
+
+
