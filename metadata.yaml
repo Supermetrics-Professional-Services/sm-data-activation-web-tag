@@ -2,9 +2,12 @@ homepage: "https://www.supermetrics.com"
 documentation: "https://github.com/Supermetrics-Professional-Services/sm-data-activation-web-tag#readme"
 versions:
   # Latest version
-  - sha: bd1d72921b82c8843b45c5b33f39004691f4ae3c
-    changeNotes: v1.5 | Removed Legacy Audience Match type | E-commerce type [1] fixed category deduplication issue; [2] added summary details to view_cart and begin_checkout events
-
+  - sha: 14bb5d56b6a4282508292d336babb3169a7924c8
+    changeNotes: "v1.6 | Added cookie based Throttle Management to 'type_mapping' tag type replicating behaviour of the BaseScript"
+  
   # Older versions
+  - sha: bd1d72921b82c8843b45c5b33f39004691f4ae3c
+    changeNotes: "v1.5 | Removed Legacy Audience Match type | E-commerce type [1] fixed category deduplication issue; [2] added summary details to view_cart and begin_checkout events"
+
   - sha: ad66660f0d43cb5a08a5d16e46dbe0be3deafdf6
     changeNotes: "Initial release"
