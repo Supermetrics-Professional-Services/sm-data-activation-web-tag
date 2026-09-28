@@ -11,7 +11,7 @@ ___INFO___
 {
   "type": "TAG",
   "id": "cvt_temp_public_id",
-  "version": 1.5,
+  "version": 1.6,
   "securityGroups": [],
   "displayName": "Data Activation - Web Tag",
   "categories": [
@@ -798,6 +798,11 @@ else if (tagType === 'type_mapping') {
   var partnerId = '' + (data.partnerId || '');
   var mergeFlag = data.merge ? '1' : '0';
 
+  var throttleCookieName = COOKIE_NAME + '_msync_' + partnerType;
+  var lastSync = getCookieValues(throttleCookieName);
+  var lastSyncTs = lastSync && lastSync.length ? makeInteger(lastSync[0]) : 0;
+  var needsSync = !lastSyncTs || (getTimestampMillis() - lastSyncTs) >= 86400000;
+  
   if (!partnerType || !partnerId) {
     logToConsole('Error: Missing required field(s): partnerType or partnerId');
     return data.gtmOnFailure();
@@ -811,9 +816,15 @@ else if (tagType === 'type_mapping') {
             '&pid=' + encodeUriComponent(partnerId) +
             '&ca_merge=' + mergeFlag;
 
-  logToConsole('Sending mapping:', mappingUrl);
-  sendPixel(mappingUrl, data.gtmOnSuccess, data.gtmOnFailure);
-
+  if (needsSync) {
+    logToConsole('Sending mapping:', mappingUrl);
+    setCookie(throttleCookieName, '' + getTimestampMillis(), { 'max-age': 86400, path: '/' });
+    sendPixel(mappingUrl, data.gtmOnSuccess, data.gtmOnFailure);
+  } else {
+    logToConsole('Mapping/merge throttled for partner:', partnerType);
+    data.gtmOnSuccess();
+  }
+  
 }
 // type_orchestration_match -----------------------------------------------
 else if (tagType === 'type_orchestration_match') {
