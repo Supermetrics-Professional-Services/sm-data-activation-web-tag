@@ -11,7 +11,7 @@ ___INFO___
 {
   "type": "TAG",
   "id": "cvt_temp_public_id",
-  "version": 1.6,
+  "version": 1.7,
   "securityGroups": [],
   "displayName": "Data Activation - Web Tag",
   "categories": [
@@ -473,6 +473,23 @@ ___TEMPLATE_PARAMETERS___
             "type": "NON_EMPTY"
           }
         ]
+      },
+      {
+        "type": "TEXT",
+        "name": "customCookieDomain",
+        "displayName": "Cookie Domain",
+        "simpleValueType": true,
+        "defaultValue": "",
+        "enablingConditions": [
+          {
+            "paramName": "SelectTagType",
+            "paramValue": "generate_svtri",
+            "type": "EQUALS"
+          }
+        ],
+        "help": "Enter your root domain with a \u003cb\u003eleading dot\u003c/b\u003e (e.g., .example.com) to ensure the cookie can be read across all your subdomains (like shop.example.com and blog.example.com).",
+        "valueHint": ".yourdomain.com",
+        "valueValidators": []
       }
     ]
   },
@@ -630,6 +647,9 @@ var LS_REFRESH_KEY = '_svtri_refresh_ts';
 const COOKIE_MAX_AGE = 34560000;            // ~400 days, seconds
 const REFRESH_MS     = 24 * 60 * 60 * 1000; // 1 day, milliseconds
 
+var rawDomain = data.customCookieDomain || ''; // At the root, safely handle undefined before trimming
+var COOKIE_DOMAIN = rawDomain.trim();
+
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -708,13 +728,20 @@ function applyLocalIdentity(logPrefix, currentLS, currentCookie) {
   
   logToConsole('[SMDA UUID] applyLocalIdentity -> Writing cookie:', COOKIE_NAME, '=', uuid);
   
-  setCookie(COOKIE_NAME, uuid, {
+  var cookieOptions = {
     'max-age': COOKIE_MAX_AGE,
     path:      '/',
     samesite:  'lax',
     secure:    true
-  });
+  };
+
+  // Only add the domain key if the user actually typed one
+  if (COOKIE_DOMAIN) {
+    cookieOptions.domain = COOKIE_DOMAIN;
+  }
   
+  setCookie(COOKIE_NAME, uuid, cookieOptions);
+    
   logToConsole('[SMDA UUID] applyLocalIdentity -> Updating localStorage:', LS_UUID_KEY, 'and', LS_REFRESH_KEY);
   
   localStorage.setItem(LS_UUID_KEY, uuid);
