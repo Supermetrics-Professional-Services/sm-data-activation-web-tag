@@ -18,7 +18,20 @@ This template is modular. You will create multiple tags in your GTM container us
 ### 1. Generate `_svtri` cookie (Identity Management)
 **What it does:** This is the foundation of your tracking. It generates a unique, anonymous identifier (UUID) for new visitors and manages the browser cookie to ensure users are tracked consistently across sessions.
 * **Best Practice:** Create one tag with this type and set it to fire on **All Pages** as early as possible (e.g., Initialization or Page View).
-* **Server GTM:** To protect your tracking from Safari's Intelligent Tracking Prevention (ITP) which deletes cookies after 7 days, expand the **Server GTM configuration** section and enter your **Server container URL**. This routes the cookie generation through your own Server GTM domain, granting it a stable, long-term lifespan. You will require to import our [`Supermetrics Data Activation - Server Client.tpl` 🔗](https://github.com/orgs/Supermetrics-Professional-Services/repositories) into your sGTM container to implement the server-set cookie creation. 
+
+**Client-side cookie settings** — these two fields control the cookie written directly by the browser when no Server GTM URL is configured (or as a fallback when the server is unreachable):
+
+* **Cookie Name *(optional)*:** The name of the first-party tracking cookie. Defaults to `_svtri`. You can override this if your organisation requires a different cookie name, for example to align with an existing naming convention.
+
+* **Cookie Domain *(optional)*:** By default, browsers scope a cookie to the exact hostname where it was created — meaning a cookie set on `www.example.com` is invisible to `shop.example.com`. If your GTM container serves multiple subdomains on the same root domain, use this field to share a single tracking identity across all of them.
+
+  Enter your **root domain with a leading dot** (e.g., `.example.com`). The tag will then set the cookie with this explicit `domain` attribute, making it readable on every subdomain — `www.example.com`, `shop.example.com`, `blog.example.com`, and so on — so that a visitor is recognised as the same person regardless of which subdomain they land on.
+
+  > **When to use it:** Only needed when the same GTM container (or multiple containers sharing this tag) is deployed across two or more subdomains. If your tracking is confined to a single subdomain, leave this field blank and the browser's default scoping applies automatically.
+  >
+  > **Note:** This setting applies **only to client-side cookie writing**. When a Server GTM URL is configured and the server responds successfully, the cookie is written by the server via its own `Set-Cookie` header — this field has no effect on that server-set cookie. Cross-subdomain scope for server-set cookies is controlled by your Server GTM tag configuration.
+
+* **Server GTM *(recommended)*:** To protect your tracking from Safari's Intelligent Tracking Prevention (ITP), which limits browser-written cookies to 7 days, expand the **Server GTM configuration** section and enter your **Server container URL**. This routes the cookie generation through your own Server GTM domain, granting it a stable, long-term lifespan. You will require to import our [`Supermetrics Data Activation - Server Client.tpl` 🔗](https://github.com/orgs/Supermetrics-Professional-Services/repositories) into your sGTM container to implement the server-set cookie creation.
 
 ### 2. Engagement
 **What it does:** Tracks real-time, timestamped user interactions on your website. Engagements are used to trigger journey orchestrations or build behavioral audiences.
