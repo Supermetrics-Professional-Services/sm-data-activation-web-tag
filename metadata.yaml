@@ -2,10 +2,13 @@ homepage: "https://www.supermetrics.com"
 documentation: "https://github.com/Supermetrics-Professional-Services/sm-data-activation-web-tag#readme"
 versions:
   # Latest version
-  - sha: 14bb5d56b6a4282508292d336babb3169a7924c8
-    changeNotes: "v1.6 | Added cookie based Throttle Management to 'type_mapping' tag type replicating behaviour of the BaseScript"
+  - sha: 5fed564a48d01eaa32da39bf281884ebc2318618
+    changeNotes: "v1.7 | Added optional Cookie Domain field to the Generate _svtri cookie type, allowing cross-subdomain cookie sharing when the same container is deployed across multiple subdomains (e.g. .example.com)."
   
   # Older versions
+  - sha: 14bb5d56b6a4282508292d336babb3169a7924c8
+    changeNotes: "v1.6 | Added cookie based Throttle Management to 'type_mapping' tag type replicating behaviour of the BaseScript"
+
   - sha: bd1d72921b82c8843b45c5b33f39004691f4ae3c
     changeNotes: "v1.5 | Removed Legacy Audience Match type | E-commerce type [1] fixed category deduplication issue; [2] added summary details to view_cart and begin_checkout events"
 
